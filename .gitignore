@@ -1,0 +1,6 @@
+supermecado/build/
+supermecado/bin/
+supermecado/vendor/
+supermecado/data/
+*.o
+*.d
