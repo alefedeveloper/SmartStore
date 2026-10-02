@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdlib.h>
 #include <string.h>
 #include "raylib.h"
 #include "config.h"
@@ -52,18 +51,4 @@ void processar_digitacao(char texto_campo[], int limite, TipoEntrada tipo)
 
         texto_campo[tamanho] = '\0';
     }
-}
-
-float converter_preco(const char *texto)
-{
-    char copia[TAM_PRECO + 1];
-
-    strncpy(copia, texto, sizeof(copia) - 1);
-    copia[sizeof(copia) - 1] = '\0';
-
-    for (int i = 0; copia[i] != '\0'; i++)
-        if (copia[i] == ',')
-            copia[i] = '.';
-
-    return (float)atof(copia);
 }

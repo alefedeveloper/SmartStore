@@ -4,7 +4,6 @@
 #include "raylib.h"
 #include "app.h"
 #include "benchmark.h"
-#include "entrada.h"
 #include "persistencia.h"
 
 #define NOME_ARQUIVO "produtos.txt"
@@ -129,14 +128,19 @@ bool acao_salvar_produto(App *app)
     Estoque    *e      = &app->estoque;
     const char *nome   = app->campos[CAMPO_NOME];
     int         codigo = atoi(app->campos[CAMPO_CODIGO]);
-    float       preco  = converter_preco(app->campos[CAMPO_PRECO]);
+    float       preco  = produto_converter_preco(app->campos[CAMPO_PRECO]);
 
     if (e->quantidade >= MAX_PRODUTOS) {
         definir_mensagem(app, true, "Limite de produtos atingido.");
         return false;
     }
-    if (codigo <= 0 || strlen(nome) == 0 || preco <= 0.0f) {
+    if (codigo <= 0 || strlen(nome) == 0) {
         definir_mensagem(app, true, "Preencha todos os campos corretamente.");
+        return false;
+    }
+    if (!produto_preco_valido(preco)) {
+        definir_mensagem(app, true,
+            TextFormat("O preço deve estar entre R$ %.2f e R$ %.2f.", PRECO_MINIMO, PRECO_MAXIMO));
         return false;
     }
     if (estoque_codigo_existe(e, codigo)) {

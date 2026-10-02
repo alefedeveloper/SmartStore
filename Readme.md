@@ -13,7 +13,8 @@ botão ✕ em cada linha da lista remove o produto, após confirmação). Se o a
 não existir, ele é criado com os produtos iniciais.
 
 Formato: uma linha por produto, `codigo;preco;nome`. Linhas iniciadas por `#` são
-comentários, e linhas inválidas são ignoradas (com aviso no rodapé):
+comentários, e linhas inválidas são ignoradas (com aviso no rodapé). Preços são
+arredondados para centavos e precisam estar entre R$ 0,01 e R$ 99.999,99:
 
 ```
 # SmartStore - produtos cadastrados
@@ -28,9 +29,10 @@ comentários, e linhas inválidas são ignoradas (com aviso no rodapé):
 supermecado/
 ├── Makefile
 ├── assets/fonts/        # fonte Inter (licença SIL OFL, ver OFL.txt)
+├── tests/                # testes da camada de dados (make test)
 ├── include/              # cabeçalhos (.h)
 │   ├── config.h          # constantes de janela, layout e limites
-│   ├── produto.h         # struct Produto
+│   ├── produto.h         # struct Produto e validação de preço
 │   ├── estoque.h         # struct Estoque e operações
 │   ├── persistencia.h    # leitura e gravação de data/produtos.txt
 │   ├── ordenacao.h       # algoritmos de ordenação
@@ -63,6 +65,7 @@ cd supermecado
 make            # compila
 make run        # compila e executa
 make debug      # compila com símbolos de depuração
+make test       # roda os testes da camada de dados (não precisa de raylib)
 make rebuild    # limpa e compila do zero
 make clean      # remove build/ e bin/
 make distclean  # remove também a raylib baixada (vendor/)

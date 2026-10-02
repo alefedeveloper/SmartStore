@@ -5,6 +5,7 @@
 #    make            compila o projeto (modo release)
 #    make run        compila e executa
 #    make debug      compila com símbolos de depuração (-g -O0)
+#    make test       roda os testes da camada de dados (não precisa de raylib)
 #    make rebuild    limpa e compila do zero
 #    make clean      remove build/ e bin/
 #    make distclean  remove também a raylib baixada em vendor/
@@ -98,12 +99,22 @@ else
     LDLIBS  += -lraylib $(SYS_LIBS)
 endif
 
+# round()/isfinite() em produto.c
+LDLIBS += -lm
+
 BIN := $(BIN_DIR)/$(TARGET)$(EXE)
+
+# Testes: só a camada de dados, que não depende da raylib
+TEST_DIR  := tests
+TEST_TMP  := $(BUILD_DIR)/tests
+TEST_BIN  := $(TEST_TMP)/teste_persistencia$(EXE)
+TEST_SRCS := $(TEST_DIR)/teste_persistencia.c $(SRC_DIR)/produto.c $(SRC_DIR)/estoque.c \
+             $(SRC_DIR)/persistencia.c
 
 # --------------------------------------------------------------------------
 #  Regras
 # --------------------------------------------------------------------------
-.PHONY: all release debug run rebuild clean distclean help info
+.PHONY: all release debug run test rebuild clean distclean help info
 
 all: release
 
@@ -134,6 +145,13 @@ endif
 run: $(BIN)
 	$(call RUN,$(BIN))
 
+test: $(TEST_BIN)
+	$(call RUN,$(TEST_BIN)) $(TEST_TMP)
+
+$(TEST_BIN): $(TEST_SRCS) $(wildcard $(INC_DIR)/*.h)
+	@$(call MKDIR,$(@D))
+	$(CC) -std=c99 -Wall -Wextra -I$(INC_DIR) $(TEST_SRCS) -o $@ -lm
+
 rebuild: clean
 	@$(MAKE) --no-print-directory all
 
@@ -153,6 +171,7 @@ help:
 	@echo "make            - compila o projeto"
 	@echo "make run        - compila e executa"
 	@echo "make debug      - compila com simbolos de depuracao"
+	@echo "make test       - roda os testes da camada de dados"
 	@echo "make rebuild    - limpa e compila do zero"
 	@echo "make clean      - remove build/ e bin/"
 	@echo "make distclean  - remove tambem a raylib baixada (vendor/)"

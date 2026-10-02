@@ -23,13 +23,16 @@ static bool interpretar_linha(char *linha, int *codigo, float *preco, char **nom
 
     char *inicioPreco = fim + 1;
     double p = strtod(inicioPreco, &fim);
-    if (fim == inicioPreco || *fim != ';' || p <= 0.0) return false;
+    if (fim == inicioPreco || *fim != ';') return false;
+
+    float arredondado = produto_arredondar_preco(p);
+    if (!produto_preco_valido(arredondado)) return false;
 
     *nome = fim + 1;
     if (**nome == '\0') return false;
 
     *codigo = (int)c;
-    *preco  = (float)p;
+    *preco  = arredondado;
     return true;
 }
 
