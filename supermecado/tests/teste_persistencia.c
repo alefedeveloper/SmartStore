@@ -6,6 +6,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#ifdef _WIN32
+#include <direct.h>
+#define criar_pasta(p) _mkdir(p)
+#else
+#define criar_pasta(p) mkdir(p, 0755)
+#endif
 #include "estoque.h"
 #include "persistencia.h"
 #include "produto.h"
@@ -225,6 +232,39 @@ static void teste_arredonda_preco_para_centavos_ao_carregar(void)
     VERIFICA(ignoradas == 1);
 }
 
+static bool existe_pasta(const char *p)
+{
+    struct stat st;
+    return stat(p, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+static void teste_falha_na_substituicao_preserva_o_destino(void)
+{
+    /* regressão: quando a troca tmp -> destino falhava, o código apagava o
+       destino e tentava de novo. Se essa segunda tentativa também falhasse
+       (ou o programa fechasse no meio), produtos.txt deixava de existir e o
+       próximo início o recriava com os produtos iniciais.
+       Aqui o destino é uma pasta vazia: a troca falha em qualquer sistema. */
+    Estoque e = {0};
+    char destino[TAM_CAMINHO], temporario[TAM_CAMINHO + 8];
+
+    snprintf(destino, sizeof(destino), "%s", caminho("destino_ocupado"));
+    snprintf(temporario, sizeof(temporario), "%s.tmp", destino);
+    remove(destino);
+    VERIFICA(criar_pasta(destino) == 0);
+
+    estoque_adicionar(&e, 1, "A", 1.00f);
+
+    VERIFICA(!persistencia_salvar(&e, destino));
+    VERIFICA(existe_pasta(destino));          /* o destino não foi apagado */
+
+    FILE *tmp = fopen(temporario, "r");
+    VERIFICA(tmp == NULL);                    /* e o temporário foi limpo */
+    if (tmp) fclose(tmp);
+
+    remove(destino);
+}
+
 /* ---------------------------------------------------------------- */
 
 int main(int argc, char **argv)
@@ -243,6 +283,7 @@ int main(int argc, char **argv)
     teste_preco_valido_sobrevive_a_ida_e_volta();
     teste_rejeita_preco_nao_finito_ou_absurdo();
     teste_arredonda_preco_para_centavos_ao_carregar();
+    teste_falha_na_substituicao_preserva_o_destino();
 
     if (falhas == 0)
         printf("OK: %d verificações passaram\n", verificacoes);

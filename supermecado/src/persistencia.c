@@ -4,7 +4,27 @@
 #include <string.h>
 #include "persistencia.h"
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #define TAM_LINHA  256
+
+/*
+ * Troca 'destino' por 'origem' de forma atômica: ou o destino continua o
+ * antigo, ou já é o novo; nunca fica sem arquivo. Se falhar, nada muda.
+ * No Windows, rename() falha quando o destino existe, por isso MoveFileEx.
+ * Os caminhos vêm em ANSI (é o que a raylib devolve), daí a versão "A".
+ */
+static bool substituir_arquivo(const char *origem, const char *destino)
+{
+#ifdef _WIN32
+    return MoveFileExA(origem, destino, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
+    return rename(origem, destino) == 0;
+#endif
+}
 
 static void remover_quebra(char *linha)
 {
@@ -105,13 +125,9 @@ bool persistencia_salvar(const Estoque *e, const char *caminho)
         return false;
     }
 
-    /* no Windows, rename falha se o destino já existir */
-    if (rename(temporario, caminho) != 0) {
-        remove(caminho);
-        if (rename(temporario, caminho) != 0) {
-            remove(temporario);
-            return false;
-        }
+    if (!substituir_arquivo(temporario, caminho)) {
+        remove(temporario);   /* o original ficou intacto */
+        return false;
     }
     return true;
 }
