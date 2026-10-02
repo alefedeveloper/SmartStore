@@ -19,7 +19,6 @@ void processar_digitacao(char texto_campo[], int limite, TipoEntrada tipo)
 
         switch (tipo) {
             case ENTRADA_TEXTO:
-                /* ASCII imprimível + letras acentuadas (Latin-1) */
                 permitido = (tecla >= 32 && tecla <= 126) || (tecla >= 160 && tecla <= 255);
                 break;
             case ENTRADA_INTEIRO:
@@ -44,7 +43,6 @@ void processar_digitacao(char texto_campo[], int limite, TipoEntrada tipo)
     if (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) {
         int tamanho = (int)strlen(texto_campo);
 
-        /* remove o caractere inteiro, mesmo que ocupe vários bytes */
         while (tamanho > 0 && eh_continuacao_utf8(texto_campo[tamanho - 1]))
             tamanho--;
         if (tamanho > 0) tamanho--;
